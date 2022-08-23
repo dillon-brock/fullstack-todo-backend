@@ -38,6 +38,15 @@ describe('user routes', () => {
       lastName: 'User',
     });
   });
+  it('#POST to /api/v1/users/sessions should sign in an existing user', async () => {
+    await UserService.create(testUser);
+    const { email, password } = testUser;
+    const res = await request(app)
+      .post('/api/v1/users/sessions')
+      .send({ email, password });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toEqual('Signed in successfully!');
+  });
   it('#GET /api/v1/users/me should return current user', async () => {
     const agent = await registerAndLogin();
     const res = await agent.get('/api/v1/users/me');
