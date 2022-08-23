@@ -44,4 +44,23 @@ describe('todos', () => {
       completed: false,
     });
   });
+  it('#GET /api/v1/todos should return a list of todos for current user', async () => {
+    const todos = [
+      { task: 'laundry' },
+      { task: 'restring guitar' },
+      { task: 'make the bed' },
+    ];
+    const [agent] = await registerAndLogin();
+    for (const todo of todos) {
+      await agent.post('/api/v1/todos').send(todo);
+    }
+    const res = await agent.get('/api/v1/todos');
+    expect(res.body.length).toBe(3);
+    expect(res.body[0]).toEqual({
+      id: expect.any(String),
+      task: expect.any(String),
+      completed: false,
+      user_id: expect.any(String),
+    });
+  });
 });
