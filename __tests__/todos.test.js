@@ -3,6 +3,7 @@ const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
 const UserService = require('../lib/services/UserService');
+const Todo = require('../lib/models/Todo');
 
 const testUser = {
   firstName: 'Test',
@@ -113,5 +114,49 @@ describe('todos', () => {
     const newTodo = await agent.post('/api/v1/todos').send(todo);
     const res = await request(app).put(`/api/v1/todos/${newTodo.body.id}`);
     expect(res.status).toBe(401);
+  });
+  it('#DELETE /api/v1/todos/:id should delete a task', async () => {
+    const mockUser = {
+      firstName: 'Mock',
+      lastName: 'User',
+      email: 'mockuser@test.com',
+      password: 'abc123',
+    };
+    const todo = { task: 'take a nap' };
+    const agent = await registerAndLogin(mockUser);
+    const postedTodo = await agent.post('/api/v1/todos').send(todo);
+    const res = await agent.delete(`/api/v1/todos/${postedTodo.body.id}`);
+    expect(res.status).toBe(204);
+    const deleteResp = await Todo.getById(postedTodo.body.id);
+    expect(deleteResp).toBeNull();
+  });
+  it('#DELETE /api/v1/todos/:id should give 401 if user is not signed in', async () => {
+    const mockUser = {
+      firstName: 'Mock',
+      lastName: 'User',
+      email: 'mockuser@test.com',
+      password: 'abc123',
+    };
+    const todo = { task: 'take a nap' };
+    const agent = await registerAndLogin(mockUser);
+    const postedTodo = await agent.post('/api/v1/todos').send(todo);
+    const res = await request(app).delete(
+      `/api/v1/todos/${postedTodo.body.id}`
+    );
+    expect(res.status).toBe(401);
+  });
+  it('#DELETE /api/v1/todos/:id should give 403 if invalid user', async () => {
+    const mockUser = {
+      firstName: 'Mock',
+      lastName: 'User',
+      email: 'mockuser@test.com',
+      password: 'abc123',
+    };
+    const postAgent = await registerAndLogin(mockUser);
+    const todo = { task: 'buy a bike' };
+    const postedTodo = await postAgent.post('/api/v1/todos').send(todo);
+    const deleteAgent = await registerAndLogin();
+    const res = await deleteAgent.delete(`/api/v1/todos/${postedTodo.body.id}`);
+    expect(res.status).toBe(403);
   });
 });
