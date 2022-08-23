@@ -64,6 +64,13 @@ describe('user routes', () => {
     const res = await request(app).get('/api/v1/users/me');
     expect(res.status).toBe(401);
   });
+  it('#DELETE /api/v1/users/sessions should log out a user', async () => {
+    const agent = await registerAndLogin();
+    const res = await agent.delete('/api/v1/users/sessions');
+    expect(res.status).toBe(204);
+    const userResp = await agent.get('/api/v1/users/me');
+    expect(userResp.status).toBe(401);
+  });
   afterAll(() => {
     pool.end();
   });
